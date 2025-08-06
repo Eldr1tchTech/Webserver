@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
+    <title>Webserver Test - Home</title>
+</head>
+<body>
+    <h1>Welcome to Your C Webserver!</h1>
+    <p>This is the index page.</p>
+    
+    <h2>Test Navigation:</h2>
+    <ul>
+        <li><a href="/test.html">Go to Test Page</a></li>
+        <li><a href="/">Back to Home</a></li>
+    </ul>
+
+    <h2>Test HTMX</h2>
+    <button hx-get="/test-htmx" hx-swap="innerHTML">
+        Click here to test HTMX
+    </button>
+    
+    <p>Server is working correctly if you can see this page!</p>
+</body>
+</html>
