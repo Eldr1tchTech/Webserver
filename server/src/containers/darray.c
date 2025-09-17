@@ -1,124 +1,119 @@
-#include "darray.h"
+#include "containers/darray.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "core/cmemory.h"
+#include "core/logger.h"
 
-darray* darray_create(int type_size, int init_cap) {
-    darray* arr = malloc(sizeof(darray));
-    if (!arr) {
-        printf("darray_create - Failed to allocate memory for darray.\n");
-        return NULL;
-    }
-    
-    arr->type_size = type_size;
-    if (init_cap < 0) {
-        printf("darray_create - Initial capacity cannot be less than 0.\n");
-        init_cap = 0;
-    }
-    
-    arr->capacity = init_cap;
-    if (init_cap > 0) {
-        arr->data = calloc(arr->capacity, arr->type_size);
-        if (!arr->data) {
-            printf("darray_create - Failed to allocate memory for data.\n");
-            free(arr);
-            return NULL;
-        }
-    } else {
-        arr->data = NULL;
-    }
-    arr->size = 0;
-    
-    // FIX: Return the created array
-    return arr;
+void* _darray_create(u64 length, u64 stride) {
+    u64 header_size = DARRAY_FIELD_LENGTH * sizeof(u64);
+    u64 array_size = length * stride;
+    u64* new_array = kallocate(header_size + array_size, MEMORY_TAG_DARRAY);
+    kset_memory(new_array, 0, header_size + array_size);
+    new_array[DARRAY_CAPACITY] = length;
+    new_array[DARRAY_LENGTH] = 0;
+    new_array[DARRAY_STRIDE] = stride;
+    return (void*)(new_array + DARRAY_FIELD_LENGTH);
 }
 
-void darray_grow(darray* arr, int incr_cap) {
-    int n_cap = arr->capacity + incr_cap;
-    if (n_cap == 0) {
-        return;
-    }
-    
-    void* new_data = realloc(arr->data, arr->type_size * n_cap);
-    if (!new_data && n_cap > 0) {
-        printf("darray_grow - Failed to reallocate memory.\n");
-        return;
-    }
-    
-    arr->data = new_data;
-    // FIX: Update capacity
-    arr->capacity = n_cap;
+void _darray_destroy(void* array) {
+    u64* header = (u64*)array - DARRAY_FIELD_LENGTH;
+    u64 header_size = DARRAY_FIELD_LENGTH * sizeof(u64);
+    u64 total_size = header_size + header[DARRAY_CAPACITY] * header[DARRAY_STRIDE];
+    kfree(header, total_size, MEMORY_TAG_DARRAY);
 }
 
-void darray_shrink(darray* arr, int decr_cap) {
-    int n_cap = arr->capacity - decr_cap;
-    if (n_cap < 0) {
-        printf("darray_shrink - Tried to decrement capacity below 0. Proceeding with 0.\n");
-        n_cap = 0;
-    }
-    
-    if (n_cap == 0) {
-        free(arr->data);
-        arr->data = NULL;
-    } else {
-        void* new_data = realloc(arr->data, arr->type_size * n_cap);
-        if (!new_data) {
-            printf("darray_shrink - Failed to reallocate memory.\n");
-            return;
-        }
-        arr->data = new_data;
-    }
-    
-    arr->capacity = n_cap;
-    
-    if (arr->size > arr->capacity) {
-        arr->size = arr->capacity;
-    }
+u64 _darray_field_get(void* array, u64 field) {
+    u64* header = (u64*)array - DARRAY_FIELD_LENGTH;
+    return header[field];
 }
 
-void darray_destroy(darray* arr) {
-    if (arr) {
-        free(arr->data);
-        arr->data = NULL;
-        free(arr);
-    }
+void _darray_field_set(void* array, u64 field, u64 value) {
+    u64* header = (u64*)array - DARRAY_FIELD_LENGTH;
+    header[field] = value;
 }
 
-void darray_add(darray* arr, void* e) {
-    if (!arr || !e) {
-        printf("darray_add - Invalid parameters.\n");
-        return;
-    }
-    
-    if (arr->size >= arr->capacity) {
-        // Double the capacity (or start with 1 if capacity is 0)
-        int grow_amount = arr->capacity > 0 ? arr->capacity : 1;
-        darray_grow(arr, grow_amount);
-    }
-    
-    // Calculate the position where the new element should be added
-    void* dest = (char*)arr->data + (arr->size * arr->type_size);
-    
-    // Copy the element data
-    memcpy(dest, e, arr->type_size);
-    
-    // Increment the size
-    arr->size++;
+void* _darray_resize(void* array) {
+    u64 length = darray_length(array);
+    u64 stride = darray_stride(array);
+    void* temp = _darray_create(
+        (DARRAY_RESIZE_FACTOR * darray_capacity(array)),
+        stride);
+    kcopy_memory(temp, array, length * stride);
+
+    _darray_field_set(temp, DARRAY_LENGTH, length);
+    _darray_destroy(array);
+    return temp;
 }
 
-void* darray_get(darray* arr, int i) {
-    if (!arr) {
-        printf("darray_get - Array is NULL.\n");
-        return NULL;
+void* _darray_push(void* array, const void* value_ptr) {
+    u64 length = darray_length(array);
+    u64 stride = darray_stride(array);
+    if (length >= darray_capacity(array)) {
+        array = _darray_resize(array);
     }
-    
-    // FIX: Should be >= not > for boundary check
-    if (i >= arr->size || i < 0) {
-        printf("darray_get - Attempted to access an out of bounds index.\n");
-        return NULL;
+
+    u64 addr = (u64)array;
+    addr += (length * stride);
+    kcopy_memory((void*)addr, value_ptr, stride);
+    _darray_field_set(array, DARRAY_LENGTH, length + 1);
+    return array;
+}
+
+void _darray_pop(void* array, void* dest) {
+    u64 length = darray_length(array);
+    u64 stride = darray_stride(array);
+    u64 addr = (u64)array;
+    addr += ((length - 1) * stride);
+    kcopy_memory(dest, (void*)addr, stride);
+    _darray_field_set(array, DARRAY_LENGTH, length - 1);
+}
+
+void* _darray_pop_at(void* array, u64 index, void* dest) {
+    u64 length = darray_length(array);
+    u64 stride = darray_stride(array);
+    if (index >= length) {
+        KERROR("Index outside the bounds of this array! Length: %i, index: %index", length, index);
+        return array;
     }
-    
-    // Calculate and return the address of the element at index i
-    return (char*)arr->data + (i * arr->type_size);
+
+    u64 addr = (u64)array;
+    kcopy_memory(dest, (void*)(addr + (index * stride)), stride);
+
+    // If not on the last element, snip out the entry and copy the rest inward.
+    if (index != length - 1) {
+        kcopy_memory(
+            (void*)(addr + (index * stride)),
+            (void*)(addr + ((index + 1) * stride)),
+            stride * (length - index));
+    }
+
+    _darray_field_set(array, DARRAY_LENGTH, length - 1);
+    return array;
+}
+
+void* _darray_insert_at(void* array, u64 index, void* value_ptr) {
+    u64 length = darray_length(array);
+    u64 stride = darray_stride(array);
+    if (index >= length) {
+        KERROR("Index outside the bounds of this array! Length: %i, index: %index", length, index);
+        return array;
+    }
+    if (length >= darray_capacity(array)) {
+        array = _darray_resize(array);
+    }
+
+    u64 addr = (u64)array;
+
+    // If not on the last element, copy the rest outward.
+    if (index != length - 1) {
+        kcopy_memory(
+            (void*)(addr + ((index + 1) * stride)),
+            (void*)(addr + (index * stride)),
+            stride * (length - index));
+    }
+
+    // Set the value at the index
+    kcopy_memory((void*)(addr + (index * stride)), value_ptr, stride);
+
+    _darray_field_set(array, DARRAY_LENGTH, length + 1);
+    return array;
 }
