@@ -15,7 +15,7 @@ compilerFlags="-g -shared -fdeclspec -fPIC"
 # -Wall -Werror
 includeFlags="-Isrc"
 linkerFlags=""
-defines="-D_DEBUG -DKEXPORT"
+defines="-D_DEBUG -DCEXPORT"
 
 echo "Building $assembly..."
 clang $cFilenames $compilerFlags -o ../bin/lib$assembly.so $defines $includeFlags $linkerFlags

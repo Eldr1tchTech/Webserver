@@ -3,7 +3,7 @@
 #include "router.h"
 #include "http_parser.h"
 
-typedef struct {
+typedef struct server {
     int socket_fd;
     int port;
     router* r;

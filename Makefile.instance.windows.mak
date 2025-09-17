@@ -7,7 +7,7 @@ EXTENSION := .exe
 COMPILER_FLAGS := -g -MD -Werror=vla -Wno-missing-braces -fdeclspec #-fPIC
 INCLUDE_FLAGS := -Iserver\src -Iinstance\src 
 LINKER_FLAGS := -g -lserver.lib -L$(OBJ_DIR)\server -L$(BUILD_DIR) #-Wl,-rpath,.
-DEFINES := -D_DEBUG -DKIMPORT
+DEFINES := -D_DEBUG -DCIMPORT
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))

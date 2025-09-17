@@ -2,7 +2,9 @@
 
 #include "http_parser.h"
 #include "response.h"
-#include "darray.h"
+#include "containers/darray.h"
+
+#define ROUTER_MAX_ROUTES 256
 
 typedef void (*route_handler)(int client_fd);
 
@@ -25,7 +27,7 @@ typedef struct route {
 
 typedef struct router {
     int num_routes;
-    darray* routes;
+    route routes[ROUTER_MAX_ROUTES];
     char* public_dir;
     char* path_404;
 } router;

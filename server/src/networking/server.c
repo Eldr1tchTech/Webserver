@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 server* server_create(int port, char* public_dir, char* path_404) {
-    server* s = malloc(sizeof(server));
+    server* s = calloc(sizeof(server));
 
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 

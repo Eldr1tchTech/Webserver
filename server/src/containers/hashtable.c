@@ -22,11 +22,11 @@ u64 hash_name(const char* name, u32 element_count) {
 
 void hashtable_create(u64 element_size, u32 element_count, void* memory, b8 is_pointer_type, hashtable* out_hashtable) {
     if (!memory || !out_hashtable) {
-        KERROR("hashtable_create failed! Pointer to memory and out_hashtable are required.");
+        CERROR("hashtable_create failed! Pointer to memory and out_hashtable are required.");
         return;
     }
     if (!element_count || !element_size) {
-        KERROR("element_size and element_count must be a positive non-zero value.");
+        CERROR("element_size and element_count must be a positive non-zero value.");
         return;
     }
 
@@ -47,11 +47,11 @@ void hashtable_destroy(hashtable* table) {
 
 b8 hashtable_set(hashtable* table, const char* name, void* value) {
     if (!table || !name || !value) {
-        KERROR("hashtable_set requires table, name and value to exist.");
+        CERROR("hashtable_set requires table, name and value to exist.");
         return false;
     }
     if (table->is_pointer_type) {
-        KERROR("hashtable_set should not be used with tables that have pointer types. Use hashtable_set_ptr instead.");
+        CERROR("hashtable_set should not be used with tables that have pointer types. Use hashtable_set_ptr instead.");
         return false;
     }
 
@@ -62,11 +62,11 @@ b8 hashtable_set(hashtable* table, const char* name, void* value) {
 
 b8 hashtable_set_ptr(hashtable* table, const char* name, void** value) {
     if (!table || !name) {
-        KWARN("hashtable_set_ptr requires table and name  to exist.");
+        CWARN("hashtable_set_ptr requires table and name  to exist.");
         return false;
     }
     if (!table->is_pointer_type) {
-        KERROR("hashtable_set_ptr should not be used with tables that do not have pointer types. Use hashtable_set instead.");
+        CERROR("hashtable_set_ptr should not be used with tables that do not have pointer types. Use hashtable_set instead.");
         return false;
     }
 
@@ -77,11 +77,11 @@ b8 hashtable_set_ptr(hashtable* table, const char* name, void** value) {
 
 b8 hashtable_get(hashtable* table, const char* name, void* out_value) {
     if (!table || !name || !out_value) {
-        KWARN("hashtable_get requires table, name and out_value to exist.");
+        CWARN("hashtable_get requires table, name and out_value to exist.");
         return false;
     }
     if (table->is_pointer_type) {
-        KERROR("hashtable_get should not be used with tables that have pointer types. Use hashtable_get_ptr instead.");
+        CERROR("hashtable_get should not be used with tables that have pointer types. Use hashtable_get_ptr instead.");
         return false;
     }
     u64 hash = hash_name(name, table->element_count);
@@ -91,11 +91,11 @@ b8 hashtable_get(hashtable* table, const char* name, void* out_value) {
 
 b8 hashtable_get_ptr(hashtable* table, const char* name, void** out_value) {
     if (!table || !name || !out_value) {
-        KWARN("hashtable_get_ptr requires table, name and out_value to exist.");
+        CWARN("hashtable_get_ptr requires table, name and out_value to exist.");
         return false;
     }
     if (!table->is_pointer_type) {
-        KERROR("hashtable_get_ptr should not be used with tables that do not have pointer types. Use hashtable_get instead.");
+        CERROR("hashtable_get_ptr should not be used with tables that do not have pointer types. Use hashtable_get instead.");
         return false;
     }
 
@@ -106,11 +106,11 @@ b8 hashtable_get_ptr(hashtable* table, const char* name, void** out_value) {
 
 b8 hashtable_fill(hashtable* table, void* value) {
     if (!table || !value) {
-        KWARN("hashtable_fill requires table and value to exist.");
+        CWARN("hashtable_fill requires table and value to exist.");
         return false;
     }
     if (table->is_pointer_type) {
-        KERROR("hashtable_fill should not be used with tables that have pointer types.");
+        CERROR("hashtable_fill should not be used with tables that have pointer types.");
         return false;
     }
 

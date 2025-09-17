@@ -7,7 +7,7 @@ EXTENSION := .dll
 COMPILER_FLAGS := -g -MD -Werror=vla -fdeclspec #-fPIC
 INCLUDE_FLAGS := -Iserver\src
 LINKER_FLAGS := -g -shared -luser32 -L$(OBJ_DIR)\server
-DEFINES := -D_DEBUG -DKEXPORT -D_CRT_SECURE_NO_WARNINGS
+DEFINES := -D_DEBUG -DCEXPORT -D_CRT_SECURE_NO_WARNINGS
 
 # Make does not offer a recursive wildcard function, so here's one:
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
